@@ -68,6 +68,8 @@ class Table extends PureComponent {
                     scrollTop: e.target.scrollTop
                 });
             }
+
+            this.actions.sizeMainTable();
         },
         handleRowHover: (isHover, key) => {
             const { hoverable } = this.props;
@@ -113,7 +115,6 @@ class Table extends PureComponent {
                 setMainTableHeaderCellWidth,
                 setMainTableHeaderCellHeight
             } = this.actions;
-
             // Set cells width first
             const cellsWidth = getMainTableCellWidth();
             setMainTableBodyCellWidth(cellsWidth);

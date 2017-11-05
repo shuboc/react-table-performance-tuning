@@ -26240,6 +26240,8 @@ var Table = (_temp2 = _class = function (_PureComponent) {
                         scrollTop: e.target.scrollTop
                     });
                 }
+
+                _this.actions.sizeMainTable();
             },
             handleRowHover: function handleRowHover(isHover, key) {
                 var hoverable = _this.props.hoverable;
@@ -26270,6 +26272,7 @@ var Table = (_temp2 = _class = function (_PureComponent) {
                         var headerHeight = _this.mainTable.tableHeader ? _this.mainTable.tableHeader.header.getBoundingClientRect().height : 0;
                         var bodyHeight = tablehHight ? tablehHight - headerHeight : 0;
                         _this.mainTable.tableBody.body.style['max-height'] = bodyHeight + 'px';
+                        _this.mainTable.tableBody.body.style['overflow-y'] = 'scroll';
                     }
                     if (_this.tableFixedLeft) {
                         _this.actions.sizeFixedTable();
@@ -26285,7 +26288,6 @@ var Table = (_temp2 = _class = function (_PureComponent) {
                     getMainTableHeaderCellActualHeight = _this$actions.getMainTableHeaderCellActualHeight,
                     setMainTableHeaderCellWidth = _this$actions.setMainTableHeaderCellWidth,
                     setMainTableHeaderCellHeight = _this$actions.setMainTableHeaderCellHeight;
-
                 // Set cells width first
 
                 var cellsWidth = getMainTableCellWidth();
@@ -26949,7 +26951,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _class, _temp;
+var _class, _temp2;
 
 var _react = __webpack_require__("./node_modules/react/index.js");
 
@@ -26975,13 +26977,44 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var TableBody = (_temp = _class = function (_PureComponent) {
+var ROW_HEIGHT = 37;
+var ROW_NUM_IN_VIEW = 10;
+
+var TableBody = (_temp2 = _class = function (_PureComponent) {
     _inherits(TableBody, _PureComponent);
 
     function TableBody() {
+        var _ref;
+
+        var _temp, _this, _ret;
+
         _classCallCheck(this, TableBody);
 
-        return _possibleConstructorReturn(this, (TableBody.__proto__ || Object.getPrototypeOf(TableBody)).apply(this, arguments));
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+        }
+
+        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = TableBody.__proto__ || Object.getPrototypeOf(TableBody)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
+            firstIndexInView: 0
+        }, _this.actions = {
+            handleBodyScroll: function handleBodyScroll(e) {
+                var onScroll = _this.props.onScroll;
+
+                // TODO: this may cause perf issue (recalculate style)
+
+                var scrollTop = e.target.scrollTop;
+                var firstIndexInView = Math.floor(scrollTop / ROW_HEIGHT);
+
+                // console.log('scrollTop:', scrollTop);
+                // console.log('firstIndexInView:', firstIndexInView);
+
+                _this.setState({
+                    firstIndexInView: firstIndexInView
+                });
+
+                onScroll(e);
+            }
+        }, _temp), _possibleConstructorReturn(_this, _ret);
     }
 
     _createClass(TableBody, [{
@@ -26989,10 +27022,9 @@ var TableBody = (_temp = _class = function (_PureComponent) {
         value: function componentDidMount() {
             var _props = this.props,
                 onMouseOver = _props.onMouseOver,
-                onTouchStart = _props.onTouchStart,
-                onScroll = _props.onScroll;
+                onTouchStart = _props.onTouchStart;
 
-            this.body.addEventListener('scroll', onScroll);
+            this.body.addEventListener('scroll', this.actions.handleBodyScroll);
             this.body.addEventListener('mouseover', onMouseOver);
             this.body.addEventListener('touchstart', onTouchStart);
         }
@@ -27001,10 +27033,9 @@ var TableBody = (_temp = _class = function (_PureComponent) {
         value: function componentWillUnmount() {
             var _props2 = this.props,
                 onMouseOver = _props2.onMouseOver,
-                onTouchStart = _props2.onTouchStart,
-                onScroll = _props2.onScroll;
+                onTouchStart = _props2.onTouchStart;
 
-            this.body.removeEventListener('scroll', onScroll);
+            this.body.removeEventListener('scroll', this.actions.handleBodyScroll);
             this.body.removeEventListener('mouseover', onMouseOver);
             this.body.removeEventListener('touchstart', onTouchStart);
         }
@@ -27039,8 +27070,16 @@ var TableBody = (_temp = _class = function (_PureComponent) {
                 onRowClick = _props3.onRowClick,
                 records = _props3.records,
                 rowClassName = _props3.rowClassName;
+            var firstIndexInView = this.state.firstIndexInView;
 
             var noData = !records || records.length === 0;
+
+            var topPlacehoderRowNum = firstIndexInView;
+            var bottomPlaceholderRomNum = records.length - firstIndexInView - ROW_NUM_IN_VIEW;
+            // console.log('topPlacehoderRowNum:', topPlacehoderRowNum);
+            // console.log('bottomPlaceholderRomNum:', bottomPlaceholderRomNum);
+            // console.log('total:', topPlacehoderRowNum + bottomPlaceholderRomNum + ROW_NUM_IN_VIEW);
+
             return _react2.default.createElement(
                 'div',
                 {
@@ -27049,6 +27088,11 @@ var TableBody = (_temp = _class = function (_PureComponent) {
                         _this2.body = node;
                     }
                 },
+                firstIndexInView > 0 && _react2.default.createElement(
+                    'div',
+                    { style: { height: topPlacehoderRowNum * ROW_HEIGHT + 'px' } },
+                    'Placeholder'
+                ),
                 records.map(function (row, index) {
                     var key = _this2.getRowKey(row, index);
                     return _react2.default.createElement(_TableRow2.default, {
@@ -27064,7 +27108,12 @@ var TableBody = (_temp = _class = function (_PureComponent) {
                         record: row,
                         rowClassName: rowClassName
                     });
-                }),
+                }).slice(firstIndexInView, firstIndexInView + ROW_NUM_IN_VIEW + 1),
+                bottomPlaceholderRomNum > 0 && _react2.default.createElement(
+                    'div',
+                    { style: { height: bottomPlaceholderRomNum * ROW_HEIGHT + 'px' } },
+                    'Placeholder'
+                ),
                 noData && _react2.default.createElement(
                     'div',
                     { className: _index2.default.tablePlaceholder },
@@ -27099,7 +27148,7 @@ var TableBody = (_temp = _class = function (_PureComponent) {
     onScroll: function onScroll() {},
     records: [],
     rowKey: 'key'
-}, _temp);
+}, _temp2);
 exports.default = TableBody;
 
 /***/ }),
@@ -27857,4 +27906,4 @@ exports.default = uniqueid;
 /***/ })
 
 /******/ });
-//# sourceMappingURL=bundle.js.map?51b7aaa8cf24d2c03e97
+//# sourceMappingURL=bundle.js.map?0e7c937d7c71a01e6ce8
