@@ -96,6 +96,7 @@ class Table extends PureComponent {
                     const headerHeight = this.mainTable.tableHeader ? this.mainTable.tableHeader.header.getBoundingClientRect().height : 0;
                     const bodyHeight = tablehHight ? (tablehHight - headerHeight) : 0;
                     this.mainTable.tableBody.body.style['max-height'] = `${bodyHeight}px`;
+                    this.mainTable.tableBody.body.style['overflow-y'] = 'scroll';
                 }
                 if (this.tableFixedLeft) {
                     this.actions.sizeFixedTable();

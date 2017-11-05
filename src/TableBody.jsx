@@ -3,6 +3,9 @@ import PropTypes from 'prop-types';
 import styles from './index.styl';
 import TableRow from './TableRow';
 
+const ROW_HEIGHT = 37;
+const ROW_NUM_IN_VIEW = 10;
+
 class TableBody extends PureComponent {
     static propTypes = {
         columns: PropTypes.array,
@@ -32,15 +35,38 @@ class TableBody extends PureComponent {
         rowKey: 'key'
     };
 
+    state = {
+        firstIndexInView: 0
+    };
+
+    actions = {
+        handleBodyScroll: (e) => {
+            const { onScroll } = this.props;
+
+            // TODO: this may cause perf issue (recalculate style)
+            const scrollTop = e.target.scrollTop;
+            const firstIndexInView = Math.floor(scrollTop / ROW_HEIGHT);
+
+            // console.log('scrollTop:', scrollTop);
+            // console.log('firstIndexInView:', firstIndexInView);
+
+            this.setState({
+                firstIndexInView
+            });
+
+            onScroll(e);
+        }
+    };
+
     componentDidMount() {
-        const { onMouseOver, onTouchStart, onScroll } = this.props;
-        this.body.addEventListener('scroll', onScroll);
+        const { onMouseOver, onTouchStart } = this.props;
+        this.body.addEventListener('scroll', this.actions.handleBodyScroll);
         this.body.addEventListener('mouseover', onMouseOver);
         this.body.addEventListener('touchstart', onTouchStart);
     }
     componentWillUnmount() {
-        const { onMouseOver, onTouchStart, onScroll } = this.props;
-        this.body.removeEventListener('scroll', onScroll);
+        const { onMouseOver, onTouchStart } = this.props;
+        this.body.removeEventListener('scroll', this.actions.handleBodyScroll);
         this.body.removeEventListener('mouseover', onMouseOver);
         this.body.removeEventListener('touchstart', onTouchStart);
     }
@@ -71,7 +97,15 @@ class TableBody extends PureComponent {
             records,
             rowClassName
         } = this.props;
+        const { firstIndexInView } = this.state;
         const noData = (!records || records.length === 0);
+
+        const topPlacehoderRowNum = firstIndexInView;
+        const bottomPlaceholderRomNum = records.length - firstIndexInView - ROW_NUM_IN_VIEW;
+        // console.log('topPlacehoderRowNum:', topPlacehoderRowNum);
+        // console.log('bottomPlaceholderRomNum:', bottomPlaceholderRomNum);
+        // console.log('total:', topPlacehoderRowNum + bottomPlaceholderRomNum + ROW_NUM_IN_VIEW);
+
         return (
             <div
                 className={styles.tbody}
@@ -79,6 +113,10 @@ class TableBody extends PureComponent {
                     this.body = node;
                 }}
             >
+                {
+                    firstIndexInView > 0 &&
+                        <div style={{ height: topPlacehoderRowNum * ROW_HEIGHT + 'px' }}>Placeholder</div>
+                }
                 {
                     records.map((row, index) => {
                         const key = this.getRowKey(row, index);
@@ -98,6 +136,11 @@ class TableBody extends PureComponent {
                             />
                         );
                     })
+                    .slice(firstIndexInView, firstIndexInView + ROW_NUM_IN_VIEW + 1)
+                }
+                {
+                    bottomPlaceholderRomNum > 0 &&
+                        <div style={{ height: bottomPlaceholderRomNum * ROW_HEIGHT + 'px' }}>Placeholder</div>
                 }
                 {
                     noData &&
