@@ -46,10 +46,11 @@ class TableBody extends PureComponent {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        const { scrollTop } = this.props;
-        if (this.body.scrollTop !== scrollTop) {
-            this.body.scrollTop = scrollTop;
-        }
+        // XXX: may cause recalculate layout
+        // const { scrollTop } = this.props;
+        // if (this.body.scrollTop !== scrollTop) {
+        //     this.body.scrollTop = scrollTop;
+        // }
     }
 
     getRowKey (record, index) {

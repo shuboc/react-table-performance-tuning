@@ -480,7 +480,7 @@ class Table extends PureComponent {
 
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.maxHeight !== this.props.maxHeight ||
-            prevProps.data !== this.props.data) {
+            prevProps.data.length !== this.props.data.length) {
             this.actions.setTableSize();
         }
     }
